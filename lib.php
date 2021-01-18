@@ -70,6 +70,10 @@ function subcourse_add_instance(stdClass $subcourse) {
 
     $subcourse->timecreated = time();
 
+    if (empty($subcourse->onlyvisiblewhenenroled)) {
+        $subcourse->onlyvisiblewhenenroled = 0;
+    }
+
     if (empty($subcourse->instantredirect)) {
         $subcourse->instantredirect = 0;
     }
@@ -120,6 +124,10 @@ function subcourse_update_instance(stdClass $subcourse) {
 
     if (!empty($subcourse->refcoursecurrent)) {
         unset($subcourse->refcourse);
+    }
+
+    if (empty($subcourse->onlyvisiblewhenenroled)) {
+        $subcourse->onlyvisiblewhenenroled = 0;
     }
 
     if (empty($subcourse->instantredirect)) {
@@ -318,22 +326,85 @@ function mod_subcourse_cm_info_view(cm_info $cm) {
         }
     }
 
+    if (!skip_is_enrolled_changes($cm)
+        && !is_enrolled_in_subcourse($cm, true)) {
+
+        // If 'onlyvisiblewhenenroled' is not checked, we can abort.
+        if (!$textwhendisabled = $DB->get_field('subcourse', 'textwhendisabled', array('id' => $cm->instance))) {
+            $notenroledtext = '';
+        }
+
+        $html .= html_writer::tag('div', $textwhendisabled,
+                ['class' => 'contentafterlink']);
+    }
+
     if ($html !== '') {
         $cm->set_after_link($html);
     }
 }
 
 /**
+ * Function to change availability of activity in course list...
+ * ... depending on enrolment status of viewing user.
+ * @param cm_info $cm
+ * @throws coding_exception
+ * @throws dml_exception
+ * @throws moodle_exception
+ */
+function mod_subcourse_cm_info_dynamic(cm_info $cm) {
+
+    global $DB, $USER;
+
+    // If 'onlyvisiblewhenenroled' is not checked, we can abort.
+    if (skip_is_enrolled_changes($cm)) {
+        return;
+    }
+
+    $modinfo = $cm->get_modinfo();
+    $course = $modinfo->get_course();
+
+    $completion = new completion_info($course);
+    // If I am not actively enrolled in the course...
+    if (!is_enrolled_in_subcourse($cm, true)) {
+
+        // But if I am not enrolled at all we don't show the subcourse all together...
+        if (!is_enrolled_in_subcourse($cm)) {
+
+            $cm->set_available(false, 0);
+
+        } else {
+            // Notify the subcourse to check the completion status, but only if NOT manual.
+            if ($cm->completion != COMPLETION_TRACKING_MANUAL) {
+                $completion->update_state($cm, COMPLETION_UNKNOWN, $USER->id);
+            }
+            $cm->set_user_visible(false);
+        }
+    } else {
+        // Notify the subcourse to check the completion status.
+        if ($cm->completion != COMPLETION_TRACKING_MANUAL) {
+            $completion->update_state($cm, COMPLETION_UNKNOWN, $USER->id);
+        }
+    }
+}
+
+/**
  * Obtains the automatic completion state for this subcourse.
- *
  * @param object $course Course
  * @param object $cm Course-module
  * @param int $userid User ID
  * @param bool $type Type of comparison (or/and; can be used as return value if no conditions)
  * @return bool True if completed, false if not, $type if conditions not set.
+ * @throws coding_exception
+ * @throws dml_exception
  */
 function subcourse_get_completion_state($course, $cm, $userid, $type) {
     global $CFG, $DB;
+
+    // If the user is not at all enrolled in the subcourse, and we have set the flat in settings, we return true.
+    if (!skip_is_enrolled_changes($cm) && !is_enrolled_in_subcourse($cm)) {
+        return true;
+    }
+
     require_once($CFG->dirroot.'/completion/completion_completion.php');
 
     $subcourse = $DB->get_record('subcourse', ['id' => $cm->instance], 'id,refcourse,completioncourse', MUST_EXIST);
@@ -414,4 +485,58 @@ function subcourse_get_coursemodule_info($coursemodule) {
     }
 
     return $info;
+}
+
+/**
+ * Function to determine if user enrolment plays a role for availability of activity.
+ * @param cm_info $cm course module
+ * @return bool
+ * @throws coding_exception
+ * @throws dml_exception
+ */
+function skip_is_enrolled_changes(cm_info $cm):bool {
+    global $DB;
+
+    // If 'onlyvisiblewhenenroled' is not checked, we can abort.
+    $result = $DB->get_field('subcourse', 'onlyvisiblewhenenroled', array('id' => $cm->instance));
+    if ($result != 1) {
+        return true;
+    }
+
+    // We don't change anything here if the user can add an instance.
+    $context = context_module::instance($cm->id);
+    if (has_capability('mod/subcourse:addinstance', $context)) {
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Function to determine if user is enrolled in subcourse.
+ * @param cm_info $cm course module
+ * @param bool $isactive
+ * @return bool
+ */
+function is_enrolled_in_subcourse(cm_info $cm, bool $isactive = false):bool {
+
+    global $DB;
+
+    $sql = "SELECT r.*
+              FROM {course} r
+              JOIN {subcourse} s ON s.refcourse = r.id
+             WHERE s.id = :subcourseid";
+
+    try {
+        $refcourse = $DB->get_record_sql($sql, ['subcourseid' => $cm->instance], IGNORE_MISSING);
+    } catch (Exception $e) {
+        return false;
+    }
+
+    $context = \context_course::instance($refcourse->id);
+
+    if (!is_enrolled($context, null, null, $isactive)) {
+        return false;
+    }
+
+    return true;
 }

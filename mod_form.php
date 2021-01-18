@@ -135,6 +135,16 @@ class mod_subcourse_mod_form extends moodleform_mod {
             }
         }
 
+        $mform->addElement('checkbox', 'onlyvisiblewhenenroled', get_string('onlyvisiblewhenenroled', 'subcourse'));
+
+        $mform->addElement('text', 'textwhendisabled', get_string('entertextwhendisabled', 'subcourse'), array('size' => '64'));
+        if (!empty($CFG->formatstringstriptags)) {
+            $mform->setType('textwhendisabled', PARAM_TEXT);
+        } else {
+            $mform->setType('textwhendisabled', PARAM_CLEANHTML);
+        }
+        $mform->addRule('textwhendisabled', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
+
         $mform->addElement('header', 'section-gradesfetching', get_string('gradesfetching', 'subcourse'));
 
         $mform->addElement('select', 'fetchpercentage', get_string('fetchgradesmode', 'subcourse'), [
