@@ -135,6 +135,8 @@ class mod_subcourse_mod_form extends moodleform_mod {
             }
         }
 
+        $mform->addElement('checkbox', 'onlyvisiblewhenenroled', get_string('onlyvisiblewhenenroled', 'subcourse'));
+
         $mform->addElement('header', 'section-gradesfetching', get_string('gradesfetching', 'subcourse'));
 
         $mform->addElement('select', 'fetchpercentage', get_string('fetchgradesmode', 'subcourse'), [
