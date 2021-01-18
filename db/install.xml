@@ -15,6 +15,7 @@
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timefetched" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Last time grades were fetched from referenced course"/>
         <FIELD NAME="refcourse" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Referenced course"/>
+        <FIELD NAME="onlyvisiblewhenenroled" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="Show activity only when user is enroled in subcourse"/>
         <FIELD NAME="instantredirect" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Should the student be instantly redirected to the course page when viewing a subcourse module?"/>
         <FIELD NAME="completioncourse" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Should the activity be marked as completed when the referenced course is completed."/>
         <FIELD NAME="blankwindow" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Should the referenced course be open in a new window?"/>

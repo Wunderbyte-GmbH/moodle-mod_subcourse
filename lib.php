@@ -70,6 +70,10 @@ function subcourse_add_instance(stdClass $subcourse) {
 
     $subcourse->timecreated = time();
 
+    if (empty($subcourse->onlyvisiblewhenenroled)) {
+        $subcourse->onlyvisiblewhenenroled = 0;
+    }
+
     if (empty($subcourse->instantredirect)) {
         $subcourse->instantredirect = 0;
     }
@@ -112,6 +116,10 @@ function subcourse_update_instance(stdClass $subcourse) {
 
     if (!empty($subcourse->refcoursecurrent)) {
         unset($subcourse->refcourse);
+    }
+
+    if (empty($subcourse->onlyvisiblewhenenroled)) {
+        $subcourse->onlyvisiblewhenenroled = 0;
     }
 
     if (empty($subcourse->instantredirect)) {
@@ -294,6 +302,42 @@ function mod_subcourse_cm_info_view(cm_info $cm) {
 }
 
 /**
+ *
+* @param cm_info $cm
+* @throws dml_exception
+ */
+function mod_subcourse_cm_info_dynamic(cm_info $cm) {
+
+    global $DB;
+
+    // If 'onlyvisiblewhenenroled' is not checked, we can abort.
+    $result = $DB->get_field('subcourse', 'onlyvisiblewhenenroled', array('id' => $cm->instance));
+    if ($result != 1) {
+        return;
+    }
+
+    // We don't change anything here if the user can add an instance.
+    $context = context_module::instance($cm->id);
+    if (has_capability('mod/subcourse:addinstance', $context)) {
+        return;
+    }
+
+
+    $sql = "SELECT r.*
+              FROM {course} r
+              JOIN {subcourse} s ON s.refcourse = r.id
+             WHERE s.id = :subcourseid";
+
+    $refcourse = $DB->get_record_sql($sql, ['subcourseid' => $cm->instance], IGNORE_MISSING);
+
+    $context = \context_course::instance($refcourse->id);
+
+    if (!is_enrolled($context)) {
+      $cm->set_user_visible(false);
+    }
+}
+
+/**
  * Obtains the automatic completion state for this subcourse.
  *
  * @param object $course Course
@@ -360,7 +404,7 @@ function subcourse_get_coursemodule_info($coursemodule) {
     global $CFG, $DB;
 
     $subcourse = $DB->get_record('subcourse', ['id' => $coursemodule->instance],
-        'id, name, intro, introformat, instantredirect, blankwindow');
+        'id, name, intro, introformat, onlyvisiblewhenenroled, instantredirect, blankwindow');
 
     if (!$subcourse) {
         return null;

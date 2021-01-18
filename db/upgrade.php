@@ -96,5 +96,17 @@ function xmldb_subcourse_upgrade($oldversion=0) {
         upgrade_mod_savepoint(true, 2020071100, 'subcourse');
     }
 
+    if ($oldversion < 2020090603) {
+        // Add field 'onlyvisiblewhenenroled' to the table 'subcourse'.
+        $table = new xmldb_table('subcourse');
+        $field = new xmldb_field('onlyvisiblewhenenroled', XMLDB_TYPE_INTEGER, '1', null, false, null, '0', 'blankwindow');
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2020090603, 'subcourse');
+    }
+
     return true;
 }

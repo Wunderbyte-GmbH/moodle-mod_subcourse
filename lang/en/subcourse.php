@@ -76,5 +76,7 @@ $string['completioncourse'] = 'Require course completed';
 $string['completioncourse_help'] = 'If enabled, the activity is considered complete when a student completes the referenced course.';
 $string['completioncourse_text'] = 'Student must complete the referenced course to complete this activity.';
 
+$string['onlyvisiblewhenenroled'] = 'If checked the subcourse activity is only visible when user is enrolled in subcourse.';
+
 // Deprecated and no longer used.
 $string['gotocoursename'] = 'Go to the course <a href="{$a->href}">{$a->name}</a>';
