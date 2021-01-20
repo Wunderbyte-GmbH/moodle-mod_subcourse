@@ -296,13 +296,21 @@ function mod_subcourse_cm_info_view(cm_info $cm) {
         }
     }
 
+    if (!skip_is_enrolled_changes($cm)
+        && !is_enrolled_in_subcourse($cm)) {
+        $html .= html_writer::tag('div', get_string('notenroled', 'mod_subcourse'),
+                ['class' => 'contentafterlink']);
+    }
+
+
     if ($html !== '') {
         $cm->set_after_link($html);
     }
 }
 
 /**
- *
+ * Function to change availability of activity in course list...
+ * ... depending on enrollment status of viewing user.
 * @param cm_info $cm
 * @throws dml_exception
  */
@@ -311,29 +319,12 @@ function mod_subcourse_cm_info_dynamic(cm_info $cm) {
     global $DB;
 
     // If 'onlyvisiblewhenenroled' is not checked, we can abort.
-    $result = $DB->get_field('subcourse', 'onlyvisiblewhenenroled', array('id' => $cm->instance));
-    if ($result != 1) {
+    if (skip_is_enrolled_changes($cm)) {
         return;
     }
 
-    // We don't change anything here if the user can add an instance.
-    $context = context_module::instance($cm->id);
-    if (has_capability('mod/subcourse:addinstance', $context)) {
-        return;
-    }
-
-
-    $sql = "SELECT r.*
-              FROM {course} r
-              JOIN {subcourse} s ON s.refcourse = r.id
-             WHERE s.id = :subcourseid";
-
-    $refcourse = $DB->get_record_sql($sql, ['subcourseid' => $cm->instance], IGNORE_MISSING);
-
-    $context = \context_course::instance($refcourse->id);
-
-    if (!is_enrolled($context)) {
-      $cm->set_user_visible(false);
+    if (!is_enrolled_in_subcourse($cm)) {
+        $cm->set_user_visible(false);
     }
 }
 
@@ -424,4 +415,56 @@ function subcourse_get_coursemodule_info($coursemodule) {
     }
 
     return $info;
+}
+
+/**
+ * function to determine if user enrollement plays a rule for availability of acitivity.
+* @param $cm
+ * @return bool
+* @throws coding_exception
+ */
+function skip_is_enrolled_changes($cm):bool {
+    global $DB;
+
+    // If 'onlyvisiblewhenenroled' is not checked, we can abort.
+    $result = $DB->get_field('subcourse', 'onlyvisiblewhenenroled', array('id' => $cm->instance));
+    if ($result != 1) {
+        return true;
+    }
+
+    // We don't change anything here if the user can add an instance.
+    $context = context_module::instance($cm->id);
+    if (has_capability('mod/subcourse:addinstance', $context)) {
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Function to determine if user is enrolled in subcourse.
+ * @param $cm
+ * @return bool
+ */
+function is_enrolled_in_subcourse($cm):bool {
+
+    global $DB;
+
+    $sql = "SELECT r.*
+              FROM {course} r
+              JOIN {subcourse} s ON s.refcourse = r.id
+             WHERE s.id = :subcourseid";
+
+    try {
+        $refcourse = $DB->get_record_sql($sql, ['subcourseid' => $cm->instance], IGNORE_MISSING);
+    } catch (Exception $e) {
+        return false;
+    }
+
+
+    $context = \context_course::instance($refcourse->id);
+
+    if (!is_enrolled($context)) {
+        return false;
+    }
+    return true;
 }

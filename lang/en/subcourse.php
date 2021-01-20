@@ -80,3 +80,4 @@ $string['onlyvisiblewhenenroled'] = 'If checked the subcourse activity is only v
 
 // Deprecated and no longer used.
 $string['gotocoursename'] = 'Go to the course <a href="{$a->href}">{$a->name}</a>';
+$string['notenroled'] = "You don't have to pass this exam (anymore)";
