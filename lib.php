@@ -316,15 +316,32 @@ function mod_subcourse_cm_info_view(cm_info $cm) {
  */
 function mod_subcourse_cm_info_dynamic(cm_info $cm) {
 
-    global $DB;
+    global $DB, $USER;
 
     // If 'onlyvisiblewhenenroled' is not checked, we can abort.
     if (skip_is_enrolled_changes($cm)) {
         return;
     }
 
+
+    $modinfo = $cm->get_modinfo();
+    $course = $modinfo->get_course();
+
+    $completion = new completion_info($course);
+
     if (!is_enrolled_in_subcourse($cm)) {
+        if ($completion->is_enabled($cm)) {
+            // Notify the subcourse to check the completion status.
+            $completion->update_state($cm, COMPLETION_COMPLETE, $USER->id);
+        }
+
         $cm->set_user_visible(false);
+    } else {
+        if ($completion->is_enabled($cm) && $cm->completion != COMPLETION_TRACKING_MANUAL) {
+
+            // Notify the subcourse to check the completion status.
+            $completion->update_state($cm, COMPLETION_UNKNOWN, $USER->id);
+        }
     }
 }
 
@@ -463,7 +480,7 @@ function is_enrolled_in_subcourse($cm):bool {
 
     $context = \context_course::instance($refcourse->id);
 
-    if (!is_enrolled($context)) {
+    if (!is_enrolled($context, null, null, true)) {
         return false;
     }
     return true;
