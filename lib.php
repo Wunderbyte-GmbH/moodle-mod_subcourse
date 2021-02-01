@@ -335,7 +335,10 @@ function mod_subcourse_cm_info_dynamic(cm_info $cm) {
             $completion->update_state($cm, COMPLETION_COMPLETE, $USER->id);
         }
 
+
         $cm->set_user_visible(false);
+        // We completely hide those tests which will be used only later anyways
+        $cm->set_extra_classes('hidden');
     } else {
         if ($completion->is_enabled($cm) && $cm->completion != COMPLETION_TRACKING_MANUAL) {
 
