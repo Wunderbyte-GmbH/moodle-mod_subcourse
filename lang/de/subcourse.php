@@ -77,4 +77,4 @@ $string['completioncourse_help'] = 'Wenn angekreuzt wird die Aktivität als abge
 $string['completioncourse_text'] = 'NutzerInnen müssen den referenzierten Kurs absolvieren, um die Aktivität abzuschließend.';
 
 $string['onlyvisiblewhenenroled'] = 'Wenn angekreuzt wird ist die Subcourse-Aktivität nur aktiv, wenn die/der NutzerIn auch eingeschrieben ist. Es wird ein Hinweis angezeigt.';
-$string['notenroled'] = 'Du musst diese Prüfung nicht (mehr) machen.';
+$string['notenroled'] = 'Du kannst das noch nicht oder nicht mehr klicken.';

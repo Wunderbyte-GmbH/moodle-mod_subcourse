@@ -297,7 +297,7 @@ function mod_subcourse_cm_info_view(cm_info $cm) {
     }
 
     if (!skip_is_enrolled_changes($cm)
-        && !is_enrolled_in_subcourse($cm)) {
+        && !is_enrolled_in_subcourse($cm, true)) {
         $html .= html_writer::tag('div', get_string('notenroled', 'mod_subcourse'),
                 ['class' => 'contentafterlink']);
     }
@@ -323,28 +323,33 @@ function mod_subcourse_cm_info_dynamic(cm_info $cm) {
         return;
     }
 
-
     $modinfo = $cm->get_modinfo();
     $course = $modinfo->get_course();
 
     $completion = new completion_info($course);
+    // If I am not actively enrolled in the course...
+    if (!is_enrolled_in_subcourse($cm, true)) {
 
-    if (!is_enrolled_in_subcourse($cm)) {
-        if ($completion->is_enabled($cm)) {
-            // Notify the subcourse to check the completion status.
-            $completion->update_state($cm, COMPLETION_COMPLETE, $USER->id);
-        }
+        // But if I am not enrolled at all we don't show the subcourse all together...
+        if (!is_enrolled_in_subcourse($cm)) {
 
+            $cm->set_available(false, 0);
 
-        $cm->set_user_visible(false);
-        // We completely hide those tests which will be used only later anyways
-        $cm->set_extra_classes('hidden');
-    } else {
-        if ($completion->is_enabled($cm) && $cm->completion != COMPLETION_TRACKING_MANUAL) {
+            if ($completion->is_enabled($cm)) {
+                // Notify the subcourse to check the completion status.
+                $completion->update_state($cm, COMPLETION_COMPLETE, $USER->id);
+            }
 
+        } else {
             // Notify the subcourse to check the completion status.
             $completion->update_state($cm, COMPLETION_UNKNOWN, $USER->id);
+
+            // $cm->set_available(false, 1);
+            $cm->set_user_visible(false);
         }
+    } else {
+        // Notify the subcourse to check the completion status.
+        $completion->update_state($cm, COMPLETION_UNKNOWN, $USER->id);
     }
 }
 
@@ -359,6 +364,14 @@ function mod_subcourse_cm_info_dynamic(cm_info $cm) {
  */
 function subcourse_get_completion_state($course, $cm, $userid, $type) {
     global $CFG, $DB;
+
+
+    // If the user is not at all enroled in the subcourse and we have set the flat in settings, we return true.
+
+    if (!skip_is_enrolled_changes($cm) && !is_enrolled_in_subcourse($cm)) {
+        return true;
+    }
+
     require_once($CFG->dirroot.'/completion/completion_completion.php');
 
     $subcourse = $DB->get_record('subcourse', ['id' => $cm->instance], 'id,refcourse,completioncourse', MUST_EXIST);
@@ -465,7 +478,7 @@ function skip_is_enrolled_changes($cm):bool {
  * @param $cm
  * @return bool
  */
-function is_enrolled_in_subcourse($cm):bool {
+function is_enrolled_in_subcourse($cm, $isactive = false):bool {
 
     global $DB;
 
@@ -483,7 +496,7 @@ function is_enrolled_in_subcourse($cm):bool {
 
     $context = \context_course::instance($refcourse->id);
 
-    if (!is_enrolled($context, null, null, true)) {
+    if (!is_enrolled($context, null, null, $isactive)) {
         return false;
     }
     return true;
