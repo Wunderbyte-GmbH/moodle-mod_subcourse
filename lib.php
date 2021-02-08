@@ -298,7 +298,13 @@ function mod_subcourse_cm_info_view(cm_info $cm) {
 
     if (!skip_is_enrolled_changes($cm)
         && !is_enrolled_in_subcourse($cm, true)) {
-        $html .= html_writer::tag('div', get_string('notenroled', 'mod_subcourse'),
+
+        // If 'onlyvisiblewhenenroled' is not checked, we can abort.
+        if (!$textwhendisabled = $DB->get_field('subcourse', 'textwhendisabled', array('id' => $cm->instance))) {
+            $notenroledtext = '';
+        }
+
+        $html .= html_writer::tag('div', $textwhendisabled,
                 ['class' => 'contentafterlink']);
     }
 
