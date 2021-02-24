@@ -285,7 +285,7 @@ function mod_subcourse_cm_info_view(cm_info $cm) {
         }
     }
 
-    $currentgrade = grade_get_grades($cm->course, 'mod', 'subcourse', $cm->instance, $USER->id);
+    /*$currentgrade = grade_get_grades($cm->course, 'mod', 'subcourse', $cm->instance, $USER->id);
 
     if (!empty($currentgrade->items[0]->grades)) {
         $currentgrade = reset($currentgrade->items[0]->grades);
@@ -294,7 +294,7 @@ function mod_subcourse_cm_info_view(cm_info $cm) {
             $html .= html_writer::tag('div', get_string('currentgrade', 'subcourse', $strgrade),
                 ['class' => 'contentafterlink']);
         }
-    }
+    }*/
 
     if (!skip_is_enrolled_changes($cm)
         && !is_enrolled_in_subcourse($cm, true)) {
