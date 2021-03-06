@@ -274,7 +274,7 @@ function mod_subcourse_cm_info_view(cm_info $cm) {
               JOIN {subcourse} s ON s.refcourse = r.id
              WHERE s.id = :subcourseid";
 
-    $refcourse = $DB->get_record_sql($sql, ['subcourseid' => $cm->instance], IGNORE_MISSING);
+    /*$refcourse = $DB->get_record_sql($sql, ['subcourseid' => $cm->instance], IGNORE_MISSING);
 
     if ($refcourse) {
         $percentage = \core_completion\progress::get_course_progress_percentage($refcourse);
@@ -283,7 +283,7 @@ function mod_subcourse_cm_info_view(cm_info $cm) {
             $html .= html_writer::tag('div', get_string('currentprogress', 'subcourse', $percentage),
                 ['class' => 'contentafterlink']);
         }
-    }
+    }*/
 
     /*$currentgrade = grade_get_grades($cm->course, 'mod', 'subcourse', $cm->instance, $USER->id);
 
