@@ -347,8 +347,11 @@ function mod_subcourse_cm_info_dynamic(cm_info $cm) {
             }
 
         } else {
-            // Notify the subcourse to check the completion status.
-            $completion->update_state($cm, COMPLETION_UNKNOWN, $USER->id);
+            // Notify the subcourse to check the completion status, but only if NOT manual.
+
+            if ($cm->completion != COMPLETION_TRACKING_MANUAL) {
+                $completion->update_state($cm, COMPLETION_UNKNOWN, $USER->id);
+            }
 
             // $cm->set_available(false, 1);
             $cm->set_user_visible(false);
