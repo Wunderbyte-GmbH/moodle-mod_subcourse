@@ -358,7 +358,9 @@ function mod_subcourse_cm_info_dynamic(cm_info $cm) {
         }
     } else {
         // Notify the subcourse to check the completion status.
-        $completion->update_state($cm, COMPLETION_UNKNOWN, $USER->id);
+        if ($cm->completion != COMPLETION_TRACKING_MANUAL) {
+            $completion->update_state($cm, COMPLETION_UNKNOWN, $USER->id);
+        }
     }
 }
 
