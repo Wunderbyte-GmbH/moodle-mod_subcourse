@@ -1,3 +1,7 @@
+### 10.2.0-ct ###
+
+* New feature: Added functionality to complete hidden subcourse activities with completion tracking.
+
 ### 10.2.0 ###
 
 * New feature: Added possibility to hide subcourse activity when user is not enrolled in the subcourse at all.

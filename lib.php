@@ -360,13 +360,34 @@ function mod_subcourse_cm_info_dynamic(cm_info $cm) {
         return;
     }
 
+    $modinfo = $cm->get_modinfo();
+    $course = $modinfo->get_course();
+
+    $completion = new completion_info($course);
     // If I am not actively enrolled in the course...
     if (!is_enrolled_in_subcourse($cm, true)) {
-        // But if I am not enrolled at all we don't show the subcourse altogether...
+
+        // But if I am not enrolled at all we don't show the subcourse all together...
         if (!is_enrolled_in_subcourse($cm)) {
+
             $cm->set_available(false, 0);
+
+            if ($completion->is_enabled($cm)) {
+                // Notify the subcourse to check the completion status.
+                $completion->update_state($cm, COMPLETION_COMPLETE, $USER->id);
+            }
+
         } else {
+            // Notify the subcourse to check the completion status, but only if NOT manual.
+            if ($cm->completion != COMPLETION_TRACKING_MANUAL) {
+                $completion->update_state($cm, COMPLETION_UNKNOWN, $USER->id);
+            }
             $cm->set_user_visible(false);
+        }
+    } else {
+        // Notify the subcourse to check the completion status.
+        if ($cm->completion != COMPLETION_TRACKING_MANUAL) {
+            $completion->update_state($cm, COMPLETION_UNKNOWN, $USER->id);
         }
     }
 }
