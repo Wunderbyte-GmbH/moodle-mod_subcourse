@@ -338,7 +338,6 @@ function mod_subcourse_cm_info_view(cm_info $cm) {
                 ['class' => 'contentafterlink']);
     }
 
-
     if ($html !== '') {
         $cm->set_after_link($html);
     }
@@ -346,9 +345,11 @@ function mod_subcourse_cm_info_view(cm_info $cm) {
 
 /**
  * Function to change availability of activity in course list...
- * ... depending on enrollment status of viewing user.
-* @param cm_info $cm
-* @throws dml_exception
+ * ... depending on enrolment status of viewing user.
+ * @param cm_info $cm
+ * @throws coding_exception
+ * @throws dml_exception
+ * @throws moodle_exception
  */
 function mod_subcourse_cm_info_dynamic(cm_info $cm) {
 
@@ -378,12 +379,9 @@ function mod_subcourse_cm_info_dynamic(cm_info $cm) {
 
         } else {
             // Notify the subcourse to check the completion status, but only if NOT manual.
-
             if ($cm->completion != COMPLETION_TRACKING_MANUAL) {
                 $completion->update_state($cm, COMPLETION_UNKNOWN, $USER->id);
             }
-
-            // $cm->set_available(false, 1);
             $cm->set_user_visible(false);
         }
     } else {
@@ -396,19 +394,18 @@ function mod_subcourse_cm_info_dynamic(cm_info $cm) {
 
 /**
  * Obtains the automatic completion state for this subcourse.
- *
  * @param object $course Course
  * @param object $cm Course-module
  * @param int $userid User ID
  * @param bool $type Type of comparison (or/and; can be used as return value if no conditions)
  * @return bool True if completed, false if not, $type if conditions not set.
+ * @throws coding_exception
+ * @throws dml_exception
  */
 function subcourse_get_completion_state($course, $cm, $userid, $type) {
     global $CFG, $DB;
 
-
-    // If the user is not at all enroled in the subcourse and we have set the flat in settings, we return true.
-
+    // If the user is not at all enrolled in the subcourse, and we have set the flat in settings, we return true.
     if (!skip_is_enrolled_changes($cm) && !is_enrolled_in_subcourse($cm)) {
         return true;
     }
@@ -496,12 +493,13 @@ function subcourse_get_coursemodule_info($coursemodule) {
 }
 
 /**
- * function to determine if user enrollement plays a rule for availability of acitivity.
-* @param $cm
+ * Function to determine if user enrolment plays a role for availability of activity.
+ * @param cm_info $cm course module
  * @return bool
-* @throws coding_exception
+ * @throws coding_exception
+ * @throws dml_exception
  */
-function skip_is_enrolled_changes($cm):bool {
+function skip_is_enrolled_changes(cm_info $cm):bool {
     global $DB;
 
     // If 'onlyvisiblewhenenroled' is not checked, we can abort.
@@ -520,10 +518,11 @@ function skip_is_enrolled_changes($cm):bool {
 
 /**
  * Function to determine if user is enrolled in subcourse.
- * @param $cm
+ * @param cm_info $cm course module
+ * @param bool $isactive
  * @return bool
  */
-function is_enrolled_in_subcourse($cm, $isactive = false):bool {
+function is_enrolled_in_subcourse(cm_info $cm, bool $isactive = false):bool {
 
     global $DB;
 
@@ -538,11 +537,11 @@ function is_enrolled_in_subcourse($cm, $isactive = false):bool {
         return false;
     }
 
-
     $context = \context_course::instance($refcourse->id);
 
     if (!is_enrolled($context, null, null, $isactive)) {
         return false;
     }
+
     return true;
 }

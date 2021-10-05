@@ -108,6 +108,18 @@ function xmldb_subcourse_upgrade($oldversion=0) {
         upgrade_mod_savepoint(true, 2020090603, 'subcourse');
     }
 
+    if ($oldversion < 2021020801) {
+        // Add field 'textwhendisabled' to the table 'subcourse'.
+        $table = new xmldb_table('subcourse');
+        $field = new xmldb_field('textwhendisabled', XMLDB_TYPE_CHAR, '255', null, false, null, '', 'onlyvisiblewhenenroled');
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2021020801, 'subcourse');
+    }
+
     if ($oldversion < 2021021400) {
         // Add the field 'coursepageprintgrade' to the table 'subcourse'.
         $table = new xmldb_table('subcourse');
@@ -127,18 +139,6 @@ function xmldb_subcourse_upgrade($oldversion=0) {
         }
 
         upgrade_mod_savepoint(true, 2021021400, 'subcourse');
-    }
-
-    if ($oldversion < 2021020801) {
-        // Add field 'textwhendisabled' to the table 'subcourse'.
-        $table = new xmldb_table('subcourse');
-        $field = new xmldb_field('textwhendisabled', XMLDB_TYPE_CHAR, '255', null, false, null, '', 'onlyvisiblewhenenroled');
-
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        upgrade_mod_savepoint(true, 2021020801, 'subcourse');
     }
 
     return true;
