@@ -1,3 +1,9 @@
+### 10.2.0 ###
+
+* New feature: Added possibility to hide subcourse activity when user is not enrolled in the subcourse at all.
+* New feature: Subcourse activity will be greyed out when user is not currently active in the subcourse.
+    Added possibility to show a customized message for this case.
+
 ### 10.1.0 ###
 
 * Ionic 5 support added to make the plugin compatible with the Moodle App version

@@ -79,4 +79,4 @@ $string['completioncourse_text'] = 'NutzerInnen müssen den referenzierten Kurs 
 $string['onlyvisiblewhenenroled'] = 'Wenn angekreuzt wird ist die Subcourse-Aktivität nur aktiv, wenn die/der NutzerIn auch eingeschrieben ist. Es wird ein Hinweis angezeigt.';
 $string['notenroled'] = 'Du kannst das noch nicht oder nicht mehr klicken.';
 
-$string['entertextwhendisabled'] = 'Gib den Text an den User sehen wenn sie nicht in den Kurs eingeschrieben sind.';
+$string['entertextwhendisabled'] = 'Gib den Text an, den User*innen sehen, wenn sie keine aktive Kurseinschreibung haben (z.B. wenn Einschreibungszeitraum abgelaufen ist oder noch nicht begonnen hat).';
