@@ -28,6 +28,7 @@ Feature: Grades are fetched automatically from the referenced course
     #
     And I set the following administration settings values:
       | grade_aggregations_visible | Mean of grades |
+    And I press "Save changes"
     And I log out
     #
     # Set grades in the referenced course.
@@ -59,7 +60,7 @@ Feature: Grades are fetched automatically from the referenced course
     And I turn editing mode on
     And I add a "Subcourse" to section "1" and I fill the form with:
       | Subcourse name                    | Unit course 1       |
-      | Fetch grades from                 | RefCourse (R)       |
+      | Fetch grades from                 | Miscellaneous / RefCourse (R) |
       | Redirect to the referenced course | 0                   |
     And I turn editing mode off
     And I follow "Unit course 1"
