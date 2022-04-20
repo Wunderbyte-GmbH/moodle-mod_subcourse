@@ -1,3 +1,7 @@
+### 10.2.1 ###
+
+* Completion Tracking is suppressed again, as it leads to problems in some cases
+
 ### 10.2.0-ct ###
 
 * New feature: Added functionality to complete hidden subcourse activities with completion tracking.
