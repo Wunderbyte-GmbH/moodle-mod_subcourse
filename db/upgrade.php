@@ -96,28 +96,7 @@ function xmldb_subcourse_upgrade($oldversion=0) {
         upgrade_mod_savepoint(true, 2020071100, 'subcourse');
     }
 
-    if ($oldversion < 2021021400) {
-        // Add the field 'coursepageprintgrade' to the table 'subcourse'.
-        $table = new xmldb_table('subcourse');
-        $field = new xmldb_field('coursepageprintgrade', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1',
-            'fetchpercentage');
-
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Add the field 'coursepageprintprogress' to the table 'subcourse'.
-        $field = new xmldb_field('coursepageprintprogress', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1',
-            'coursepageprintgrade');
-
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        upgrade_mod_savepoint(true, 2021021400, 'subcourse');
-    }
-
-    if ($oldversion < 2021021402) {
+    if ($oldversion < 2020090603) {
         // Add field 'onlyvisiblewhenenroled' to the table 'subcourse'.
         $table = new xmldb_table('subcourse');
         $field = new xmldb_field('onlyvisiblewhenenroled', XMLDB_TYPE_INTEGER, '1', null, false, null, '0', 'refcourse');
@@ -126,13 +105,19 @@ function xmldb_subcourse_upgrade($oldversion=0) {
             $dbman->add_field($table, $field);
         }
 
+        upgrade_mod_savepoint(true, 2020090603, 'subcourse');
+    }
+
+    if ($oldversion < 2021020801) {
+        // Add field 'textwhendisabled' to the table 'subcourse'.
+        $table = new xmldb_table('subcourse');
         $field = new xmldb_field('textwhendisabled', XMLDB_TYPE_CHAR, '255', null, false, null, '', 'onlyvisiblewhenenroled');
 
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
-        upgrade_mod_savepoint(true, 2021021402, 'subcourse');
+        upgrade_mod_savepoint(true, 2021020801, 'subcourse');
     }
 
     return true;

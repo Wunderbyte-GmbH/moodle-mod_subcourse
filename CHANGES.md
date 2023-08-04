@@ -1,30 +1,3 @@
-### 10.2.1 ###
-
-* Completion Tracking is suppressed again, as it leads to problems in some cases
-
-### 10.2.0-ct ###
-
-* New feature: Added functionality to complete hidden subcourse activities with completion tracking.
-
-### 10.2.0 ###
-
-* New feature: Added possibility to hide subcourse activity when user is not enrolled in the subcourse at all.
-* New feature: Subcourse activity will be greyed out when user is not currently active in the subcourse.
-    Added possibility to show a customized message for this case.
-
-### 10.1.0 ###
-
-* Ionic 5 support added to make the plugin compatible with the Moodle App version
-  3.9.5. Credit goes to Dani Palou (@dpalou).
-* Removed legacy Bootstrap 2 classes. Credit goes to Daniel Escobar (@Daryhez).
-* Coding style cleanups and improvements.
-
-### 10.0.0 ###
-
-* Display of progress and grade in referenced course on the main course page can be
-  now configured (issue #32). Credit goes to Arnaud Trouvé (@ak4t0sh).
-* Supported Moodle versions 3.9 (LTS) and 3.10.
-
 ### 9.0.1 ###
 
 * Added example JSON context to the ionic template to pass the mustache lint.

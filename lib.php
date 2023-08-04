@@ -82,14 +82,6 @@ function subcourse_add_instance(stdClass $subcourse) {
         $subcourse->blankwindow = 0;
     }
 
-    if (empty($subcourse->coursepageprintprogress)) {
-        $subcourse->coursepageprintprogress = 0;
-    }
-
-    if (empty($subcourse->coursepageprintgrade)) {
-        $subcourse->coursepageprintgrade = 0;
-    }
-
     $newid = $DB->insert_record("subcourse", $subcourse);
 
     if (!empty($subcourse->refcourse)) {
@@ -138,14 +130,6 @@ function subcourse_update_instance(stdClass $subcourse) {
         $subcourse->blankwindow = 0;
     }
 
-    if (empty($subcourse->coursepageprintprogress)) {
-        $subcourse->coursepageprintprogress = 0;
-    }
-
-    if (empty($subcourse->coursepageprintgrade)) {
-        $subcourse->coursepageprintgrade = 0;
-    }
-
     $DB->update_record('subcourse', $subcourse);
 
     if (!empty($subcourse->refcourse)) {
@@ -174,15 +158,15 @@ function subcourse_delete_instance($id) {
     require_once($CFG->libdir.'/gradelib.php');
 
     // Check the instance exists.
-    if (!$subcourse = $DB->get_record("subcourse", ["id" => $id])) {
+    if (!$subcourse = $DB->get_record("subcourse", array("id" => $id))) {
         return false;
     }
 
     // Remove the instance record.
-    $DB->delete_records("subcourse", ["id" => $subcourse->id]);
+    $DB->delete_records("subcourse", array("id" => $subcourse->id));
 
     // Clean up the gradebook items.
-    grade_update('mod/subcourse', $subcourse->course, 'mod', 'subcourse', $subcourse->id, 0, null, ['deleted' => true]);
+    grade_update('mod/subcourse', $subcourse->course, 'mod', 'subcourse', $subcourse->id, 0, null, array('deleted' => true));
 
     return true;
 }
@@ -281,50 +265,36 @@ function subcourse_scale_used_anywhere($scaleid) {
  */
 function mod_subcourse_cm_info_view(cm_info $cm) {
     global $CFG, $USER, $DB;
-
-    if (isset($cm->customdata->coursepageprintgrade) && isset($cm->customdata->coursepageprintprogress)) {
-        $displayoptions = (object) [
-            'coursepageprintgrade' => $cm->customdata->coursepageprintgrade,
-            'coursepageprintprogress' => $cm->customdata->coursepageprintprogress,
-        ];
-
-    } else {
-        // This is unexpected - the customdata should be set in {@see subcourse_get_coursemodule_info()}.
-        $displayoptions = $DB->get_record('subcourse', ['id' => $cm->instance], 'coursepageprintgrade, coursepageprintprogress');
-    }
+    require_once($CFG->libdir.'/gradelib.php');
 
     $html = '';
 
-    if ($displayoptions->coursepageprintprogress) {
-        $sql = "SELECT r.*
-                  FROM {course} r
-                  JOIN {subcourse} s ON s.refcourse = r.id
-                 WHERE s.id = :subcourseid";
+    $sql = "SELECT r.*
+              FROM {course} r
+              JOIN {subcourse} s ON s.refcourse = r.id
+             WHERE s.id = :subcourseid";
 
-        $refcourse = $DB->get_record_sql($sql, ['subcourseid' => $cm->instance], IGNORE_MISSING);
-        $percentage = null;
-        if ($refcourse) {
-            $percentage = \core_completion\progress::get_course_progress_percentage($refcourse);
-        }
+    /*$refcourse = $DB->get_record_sql($sql, ['subcourseid' => $cm->instance], IGNORE_MISSING);
+
+    if ($refcourse) {
+        $percentage = \core_completion\progress::get_course_progress_percentage($refcourse);
         if ($percentage !== null) {
             $percentage = floor($percentage);
             $html .= html_writer::tag('div', get_string('currentprogress', 'subcourse', $percentage),
                 ['class' => 'contentafterlink']);
         }
-    }
+    }*/
 
-    if ($displayoptions->coursepageprintgrade) {
-        require_once($CFG->libdir.'/gradelib.php');
+    /*$currentgrade = grade_get_grades($cm->course, 'mod', 'subcourse', $cm->instance, $USER->id);
 
-        $grades = grade_get_grades($cm->course, 'mod', 'subcourse', $cm->instance, $USER->id);
-        $currentgrade = (empty($grades->items[0]->grades)) ? null : reset($grades->items[0]->grades);
-
-        if (($currentgrade !== null) and isset($currentgrade->grade) and !($currentgrade->hidden)) {
+    if (!empty($currentgrade->items[0]->grades)) {
+        $currentgrade = reset($currentgrade->items[0]->grades);
+        if (isset($currentgrade->grade) and !($currentgrade->hidden)) {
             $strgrade = $currentgrade->str_grade;
             $html .= html_writer::tag('div', get_string('currentgrade', 'subcourse', $strgrade),
                 ['class' => 'contentafterlink']);
         }
-    }
+    }*/
 
     if (!skip_is_enrolled_changes($cm)
         && !is_enrolled_in_subcourse($cm, true)) {
@@ -338,6 +308,7 @@ function mod_subcourse_cm_info_view(cm_info $cm) {
                 ['class' => 'contentafterlink']);
     }
 
+
     if ($html !== '') {
         $cm->set_after_link($html);
     }
@@ -345,11 +316,9 @@ function mod_subcourse_cm_info_view(cm_info $cm) {
 
 /**
  * Function to change availability of activity in course list...
- * ... depending on enrolment status of viewing user.
- * @param cm_info $cm
- * @throws coding_exception
- * @throws dml_exception
- * @throws moodle_exception
+ * ... depending on enrollment status of viewing user.
+* @param cm_info $cm
+* @throws dml_exception
  */
 function mod_subcourse_cm_info_dynamic(cm_info $cm) {
 
@@ -372,11 +341,19 @@ function mod_subcourse_cm_info_dynamic(cm_info $cm) {
 
             $cm->set_available(false, 0);
 
+            if ($completion->is_enabled($cm)) {
+                // Notify the subcourse to check the completion status.
+                $completion->update_state($cm, COMPLETION_COMPLETE, $USER->id);
+            }
+
         } else {
             // Notify the subcourse to check the completion status, but only if NOT manual.
+
             if ($cm->completion != COMPLETION_TRACKING_MANUAL) {
                 $completion->update_state($cm, COMPLETION_UNKNOWN, $USER->id);
             }
+
+            // $cm->set_available(false, 1);
             $cm->set_user_visible(false);
         }
     } else {
@@ -389,18 +366,19 @@ function mod_subcourse_cm_info_dynamic(cm_info $cm) {
 
 /**
  * Obtains the automatic completion state for this subcourse.
+ *
  * @param object $course Course
  * @param object $cm Course-module
  * @param int $userid User ID
  * @param bool $type Type of comparison (or/and; can be used as return value if no conditions)
  * @return bool True if completed, false if not, $type if conditions not set.
- * @throws coding_exception
- * @throws dml_exception
  */
 function subcourse_get_completion_state($course, $cm, $userid, $type) {
     global $CFG, $DB;
 
-    // If the user is not at all enrolled in the subcourse, and we have set the flat in settings, we return true.
+
+    // If the user is not at all enroled in the subcourse and we have set the flat in settings, we return true.
+
     if (!skip_is_enrolled_changes($cm) && !is_enrolled_in_subcourse($cm)) {
         return true;
     }
@@ -461,7 +439,7 @@ function subcourse_get_coursemodule_info($coursemodule) {
     global $CFG, $DB;
 
     $subcourse = $DB->get_record('subcourse', ['id' => $coursemodule->instance],
-        'id, name, intro, introformat, instantredirect, blankwindow, coursepageprintgrade, coursepageprintprogress');
+        'id, name, intro, introformat, onlyvisiblewhenenroled, instantredirect, blankwindow');
 
     if (!$subcourse) {
         return null;
@@ -469,10 +447,6 @@ function subcourse_get_coursemodule_info($coursemodule) {
 
     $info = new cached_cm_info();
     $info->name = $subcourse->name;
-    $info->customdata = (object) [
-        'coursepageprintgrade' => $subcourse->coursepageprintgrade,
-        'coursepageprintprogress' => $subcourse->coursepageprintprogress,
-    ];
 
     if ($subcourse->instantredirect && $subcourse->blankwindow) {
         $url = new moodle_url('/mod/subcourse/view.php', ['id' => $coursemodule->id, 'isblankwindow' => 1]);
@@ -488,13 +462,12 @@ function subcourse_get_coursemodule_info($coursemodule) {
 }
 
 /**
- * Function to determine if user enrolment plays a role for availability of activity.
- * @param cm_info $cm course module
+ * function to determine if user enrollement plays a rule for availability of acitivity.
+* @param $cm
  * @return bool
- * @throws coding_exception
- * @throws dml_exception
+* @throws coding_exception
  */
-function skip_is_enrolled_changes(cm_info $cm):bool {
+function skip_is_enrolled_changes($cm):bool {
     global $DB;
 
     // If 'onlyvisiblewhenenroled' is not checked, we can abort.
@@ -513,11 +486,10 @@ function skip_is_enrolled_changes(cm_info $cm):bool {
 
 /**
  * Function to determine if user is enrolled in subcourse.
- * @param cm_info $cm course module
- * @param bool $isactive
+ * @param $cm
  * @return bool
  */
-function is_enrolled_in_subcourse(cm_info $cm, bool $isactive = false):bool {
+function is_enrolled_in_subcourse($cm, $isactive = false):bool {
 
     global $DB;
 
@@ -532,11 +504,11 @@ function is_enrolled_in_subcourse(cm_info $cm, bool $isactive = false):bool {
         return false;
     }
 
+
     $context = \context_course::instance($refcourse->id);
 
     if (!is_enrolled($context, null, null, $isactive)) {
         return false;
     }
-
     return true;
 }
